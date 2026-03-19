@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI & Quantum Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>AI & Quantum Hub</h1>
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">PORT 5001</div>
+        </header>
+        
+        <div id="chatbox">
+            <div class="message bot-message">
+                Welcome back! I'm your advisor for Cloud AI and Quantum Computing. How can I assist you in your research today?
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Ask a question about machine intelligence or qubits..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("userInput");
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = "";
+
+            const typingId = addMessage("Analyzing data...", 'bot', true);
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                removeMessage(typingId);
+                addMessage(data.reply, 'bot');
+            } catch (e) {
+                removeMessage(typingId);
+                addMessage("Oops! I couldn't reach the service. Please check your connection.", 'bot');
+            }
+        }
+
+        function addMessage(text, side, isTyping = false) {
+            const chatbox = document.getElementById("chatbox");
+            const div = document.createElement("div");
+            const id = 'm-' + Date.now();
+            div.id = id;
+            div.className = `message ${side}-message ${isTyping ? 'typing-indicator' : ''}`;
+            div.innerText = text;
+            chatbox.appendChild(div);
+            // Auto scroll to bottom
+            chatbox.scrollTo({ top: chatbox.scrollHeight, behavior: 'smooth' });
+            return id;
+        }
+
+        function removeMessage(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
+
+
